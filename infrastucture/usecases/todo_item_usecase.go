@@ -1,8 +1,13 @@
 package usecases
 
 import (
+	"cleanAchitech/config/db"
 	"cleanAchitech/config/domain"
 	models "cleanAchitech/entities"
+	"errors"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // TodoItemUsecase is a struct that holds the repository for todo items
@@ -17,6 +22,19 @@ func NewTodoItemUsecase(repo domain.TodoItemRepository) *TodoItemUsecase {
 
 // CreateItem creates a new todo item
 func (u *TodoItemUsecase) CreateItem(item *models.TodoItem) error {
+	// Check if item title is already exist
+	var existingItem models.TodoItem
+	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return result.Error
+	}
+	if result.RowsAffected > 0 {
+		return &gin.Error{
+			Err:  errors.New("item title already exists"),
+			Type: gin.ErrorTypePublic,
+			Meta: "Item title already exists",
+		}
+	}
 	return u.repo.Create(item)
 }
 
@@ -32,6 +50,19 @@ func (u *TodoItemUsecase) GetItems() ([]models.TodoItem, error) {
 
 // UpdateItem updates a todo item
 func (u *TodoItemUsecase) UpdateItem(item *models.TodoItem) error {
+	// Check if item title is already exist
+	var existingItem models.TodoItem
+	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return result.Error
+	}
+	if result.RowsAffected > 0 {
+		return &gin.Error{
+			Err:  errors.New("item title already exists"),
+			Type: gin.ErrorTypePublic,
+			Meta: "Item title already exists",
+		}
+	}
 	return u.repo.Update(item)
 }
 

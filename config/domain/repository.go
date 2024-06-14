@@ -17,4 +17,7 @@ type TodoItemRepository interface {
 
 	// Delete deletes a todo item by its id.
 	Delete(id uint) error
+
+	// GetByTitle retrieves a todo item by its id.
+	GetByTitle(title string) (*models.TodoItem, error)
 }

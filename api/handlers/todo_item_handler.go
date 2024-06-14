@@ -1,14 +1,12 @@
 package handlers
 
 import (
-	"cleanAchitech/config/db"
 	models "cleanAchitech/entities"
 	"cleanAchitech/infrastucture/usecases"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // TodoItemHandler handles todo item related HTTP requests
@@ -26,18 +24,6 @@ func (h *TodoItemHandler) CreateItem(c *gin.Context) {
 	var item models.TodoItem
 	if err := c.ShouldBindJSON(&item); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Check if item title is already exist
-	var existingItem models.TodoItem
-	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
-	if result.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Item title already exists"})
 		return
 	}
 
@@ -82,18 +68,6 @@ func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 	var item models.TodoItem
 	if err := c.ShouldBindJSON(&item); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Check if item title is already exist
-	var existingItem models.TodoItem
-	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
-	if result.RowsAffected > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Item title already exists"})
 		return
 	}
 

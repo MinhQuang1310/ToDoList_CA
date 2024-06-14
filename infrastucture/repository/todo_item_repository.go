@@ -29,6 +29,13 @@ func (r *TodoItemRepository) GetByID(id uint) (*models.TodoItem, error) {
 	return &item, err
 }
 
+// GetByTitle retrieves a todo item from the repository by its ID
+func (r *TodoItemRepository) GetByTitle(title string) (*models.TodoItem, error) {
+	var item models.TodoItem
+	err := r.db.First(&item, title).Error
+	return &item, err
+}
+
 // GetAll retrieves all todo items from the repository
 func (r *TodoItemRepository) GetAll() ([]models.TodoItem, error) {
 	var items []models.TodoItem
