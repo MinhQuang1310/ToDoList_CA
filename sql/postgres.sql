@@ -49,14 +49,21 @@ CREATE INDEX idx_todo_items_status ON todo_items(status);
 -- Tạo index kết hợp trên các cột Title và Status
 CREATE INDEX idx_todo_items_title_status ON todo_items(title, status);
 
-select * from public.todo_items where title = 'a123456' and status = 'available'
+select * from public.todo_items where title = 'a123456' and status = 'updated'
 select * from public.todo_items where title = 'a123456'
+select * from public.todo_items where status = 'updated'
+select * from public.todo_items where status = 'available'
 
 
 explain analyze select * from public.todo_items where status = 'available' and title = 'a123456'
 explain analyze select * from public.todo_items where title = 'a123456' and status = 'available'
 
 explain analyze select * from public.todo_items where title = 'a123456'
+explain analyze select * from public.todo_items where status = 'updated'
+	
+SELECT * FROM public.todo_items WHERE title = 'title_123456' AND status = 'available';
+-- Truy vấn kết hợp title và status
+EXPLAIN ANALYZE SELECT * FROM public.todo_items WHERE title = 'title_123456' AND status = 'available';
 
 	
 drop index idx_todo_items_title_status
@@ -69,7 +76,21 @@ drop index idx_todo_items_status
 
 
 
-
+-- Thêm dữ liệu mẫu
+DO $$
+BEGIN
+    FOR i IN 1..5000000 LOOP
+        INSERT INTO public.todo_items (title, description, status)
+        VALUES (
+            'title_' || i,
+            'description_' || i,
+            CASE 
+                WHEN i % 2 = 0 THEN 'available' 
+                ELSE 'unavailable' 
+            END
+        );
+    END LOOP;
+END $$;
 
 
 
