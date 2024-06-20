@@ -40,19 +40,19 @@ func main() {
 	{
 		items := v1.Group("/items")
 		{
-			// Create a new todo item
+			// Create a new Todoitems
 			items.POST("/create", todoItemHandler.CreateItem)
 
-			// Get a todo item by id
+			// Get a Todoitems by id
 			items.GET("/getitem/:id", todoItemHandler.GetItem)
 
-			// Get all todo items
+			// Get all Todoitems
 			items.GET("/getall", todoItemHandler.GetItems)
 
-			// Update a todo item
+			// Update a Todoitems
 			items.PUT("/update/:id", todoItemHandler.UpdateItem)
 
-			// Delete a todo item
+			// Delete a Todoitems
 			items.DELETE("/delete/:id", todoItemHandler.DeleteItem)
 		}
 	}

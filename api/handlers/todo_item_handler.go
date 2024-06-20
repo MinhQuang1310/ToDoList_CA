@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TodoItemHandler handles todo item related HTTP requests
+// TodoItemHandler handles TodoItem related HTTP requests
 type TodoItemHandler struct {
 	usecase *usecases.TodoItemUsecase
 }
@@ -19,7 +19,7 @@ func NewTodoItemHandler(u *usecases.TodoItemUsecase) *TodoItemHandler {
 	return &TodoItemHandler{usecase: u}
 }
 
-// CreateItem handles HTTP POST requests to create a new todo item
+// CreateItem handles HTTP POST requests to create a new TodoItems
 func (h *TodoItemHandler) CreateItem(c *gin.Context) {
 	var item models.TodoItem
 	if err := c.ShouldBindJSON(&item); err != nil {
@@ -37,7 +37,7 @@ func (h *TodoItemHandler) CreateItem(c *gin.Context) {
 	})
 }
 
-// GetItem handles HTTP GET requests to get a todo item by ID
+// GetItem handles HTTP GET requests to get a TodoItem by ID
 func (h *TodoItemHandler) GetItem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	item, err := h.usecase.GetItem(uint(id))
@@ -50,7 +50,7 @@ func (h *TodoItemHandler) GetItem(c *gin.Context) {
 	})
 }
 
-// GetItems handles HTTP GET requests to get all todo items
+// GetItems handles HTTP GET requests to get all TodoItems
 func (h *TodoItemHandler) GetItems(c *gin.Context) {
 	items, err := h.usecase.GetItems()
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *TodoItemHandler) GetItems(c *gin.Context) {
 	})
 }
 
-// UpdateItem handles HTTP PUT requests to update a todo item by ID
+// UpdateItem handles HTTP PUT requests to update a TodoItem by ID
 func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var item models.TodoItem
@@ -71,7 +71,10 @@ func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 		return
 	}
 
+	// Set the ID of the item to update
 	item.ID = uint(id)
+
+	// Update the item in the usecase
 	if err := h.usecase.UpdateItem(&item); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -82,7 +85,7 @@ func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 	})
 }
 
-// DeleteItem handles HTTP DELETE requests to delete a todo item by ID
+// DeleteItem handles HTTP DELETE requests to delete a TodoItem by ID
 func (h *TodoItemHandler) DeleteItem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	if err := h.usecase.DeleteItem(uint(id)); err != nil {
