@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"cleanAchitech/config/db"
 	"cleanAchitech/config/domain"
 	models "cleanAchitech/entities"
 	"errors"
@@ -10,7 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// TodoItemUsecase is a struct that holds the repository for todo items
+var ErrItemTitleAlreadyExists = "Item title already exists"
+
+// TodoItemUsecase is a struct that holds the repository for Todoitems
 type TodoItemUsecase struct {
 	repo domain.TodoItemRepository
 }
@@ -20,53 +21,84 @@ func NewTodoItemUsecase(repo domain.TodoItemRepository) *TodoItemUsecase {
 	return &TodoItemUsecase{repo: repo}
 }
 
-// CreateItem creates a new todo item
+// CreateItem creates a new Todoitems
 func (u *TodoItemUsecase) CreateItem(item *models.TodoItem) error {
 	// Check if item title is already exist
 	var existingItem models.TodoItem
-	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		return result.Error
+	err := u.repo.GetByTitle(item.Title, &existingItem)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
 	}
-	if result.RowsAffected > 0 {
+	if err == nil && existingItem.ID != item.ID {
 		return &gin.Error{
-			Err:  errors.New("item title already exists"),
+			Err:  errors.New(ErrItemTitleAlreadyExists),
 			Type: gin.ErrorTypePublic,
-			Meta: "Item title already exists",
+			Meta: ErrItemTitleAlreadyExists,
 		}
 	}
 	return u.repo.Create(item)
 }
 
-// GetItem retrieves a todo item by its id
+// GetItem retrieves a Todoitems by its id
 func (u *TodoItemUsecase) GetItem(id uint) (*models.TodoItem, error) {
 	return u.repo.GetByID(id)
 }
 
-// GetItems retrieves all todo items
+// GetItems retrieves all Todoitems
 func (u *TodoItemUsecase) GetItems() ([]models.TodoItem, error) {
 	return u.repo.GetAll()
 }
 
-// UpdateItem updates a todo item
+// UpdateItem updates a Todoitems
 func (u *TodoItemUsecase) UpdateItem(item *models.TodoItem) error {
 	// Check if item title is already exist
 	var existingItem models.TodoItem
-	result := db.InitDB().Where("title = ?", item.Title).First(&existingItem)
-	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
-		return result.Error
+	err := u.repo.GetByTitle(item.Title, &existingItem)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
 	}
-	if result.RowsAffected > 0 {
+	// Update only specified fields
+	if item.Title != "" {
+		existingItem.Title = item.Title
+	}
+	if item.Description != "" {
+		existingItem.Description = item.Description
+	}
+	if item.Status != "" {
+		existingItem.Status = item.Status
+	}
+
+	if err == nil && existingItem.ID != item.ID {
 		return &gin.Error{
-			Err:  errors.New("item title already exists"),
+			Err:  errors.New(ErrItemTitleAlreadyExists),
 			Type: gin.ErrorTypePublic,
-			Meta: "Item title already exists",
+			Meta: ErrItemTitleAlreadyExists,
 		}
 	}
-	return u.repo.Update(item)
+	return u.repo.Update(&existingItem)
 }
 
-// DeleteItem deletes a todo item by its id
+// DeleteItem deletes a Todoitems by its id
 func (u *TodoItemUsecase) DeleteItem(id uint) error {
 	return u.repo.Delete(id)
+}
+
+// CreateItem creates a new Todoitems using stored procedure
+func (u *TodoItemUsecase) CreateItemWithProcedure(item *models.TodoItem) error {
+	// Check if item title already exists
+	var existingItem models.TodoItem
+	err := u.repo.GetByTitle(item.Title, &existingItem)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+	if err == nil {
+		return &gin.Error{
+			Err:  errors.New(ErrItemTitleAlreadyExists),
+			Type: gin.ErrorTypePublic,
+			Meta: ErrItemTitleAlreadyExists,
+		}
+	}
+
+	// Call stored procedure to create item
+	return u.repo.CreateWithProcedure(item)
 }
