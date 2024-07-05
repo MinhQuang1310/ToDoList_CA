@@ -3,16 +3,20 @@ package handlers
 import (
 	models "cleanAchitech/entities"
 	"cleanAchitech/infrastucture/usecases"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
+var errItemNotFound = errors.New("item not found")
+
 // formatResponse formats the response data with additional properties
-func formatResponse(c *gin.Context, code string, message string, data interface{}, total int, pageNumber int, pageSize int) gin.H {
+func formatResponse(_ *gin.Context, code string, message string, data interface{}, total int, pageNumber int, pageSize int) gin.H {
 	return gin.H{
 		"response": gin.H{
 			"responseId":      uuid.New().String(),
@@ -59,7 +63,11 @@ func (h *TodoItemHandler) GetItem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	item, err := h.usecase.GetItem(uint(id))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, formatResponse(c, strconv.Itoa(http.StatusBadRequest), err.Error(), nil, 0, 0, 0))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, formatResponse(c, strconv.Itoa(http.StatusNotFound), errItemNotFound.Error(), nil, 0, 0, 0))
+		} else {
+			c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
+		}
 		return
 	}
 	c.JSON(http.StatusOK, formatResponse(c, strconv.Itoa(http.StatusOK), "Item retrieved successfully!", item, 1, 0, 1))
@@ -67,7 +75,9 @@ func (h *TodoItemHandler) GetItem(c *gin.Context) {
 
 // GetItems handles HTTP GET requests to get all TodoItems
 func (h *TodoItemHandler) GetItems(c *gin.Context) {
-	items, err := h.usecase.GetItems()
+	items, err := h.usecase.GetItems(func(db *gorm.DB) *gorm.DB {
+		return db.Not("DeletedAt", nil)
+	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, formatResponse(c, strconv.Itoa(http.StatusBadRequest), err.Error(), nil, 0, 0, 0))
 		return
@@ -87,6 +97,16 @@ func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 	// Set the ID of the item to update
 	item.ID = uint(id)
 
+	// Check if the item exists in the database
+	if _, err := h.usecase.GetItem(item.ID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, formatResponse(c, strconv.Itoa(http.StatusNotFound), errItemNotFound.Error(), nil, 0, 0, 0))
+		} else {
+			c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
+		}
+		return
+	}
+
 	// Update the item in the usecase
 	if err := h.usecase.UpdateItem(&item); err != nil {
 		c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
@@ -98,8 +118,20 @@ func (h *TodoItemHandler) UpdateItem(c *gin.Context) {
 // DeleteItem handles HTTP DELETE requests to delete a TodoItem by ID
 func (h *TodoItemHandler) DeleteItem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
+	// Check if the item exists in the database
+	_, err := h.usecase.GetItem(uint(id))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, formatResponse(c, strconv.Itoa(http.StatusNotFound), errItemNotFound.Error(), nil, 0, 0, 0))
+		} else {
+			c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
+		}
+		return
+	}
+
+	// Delete the item from the usecase
 	if err := h.usecase.DeleteItem(uint(id)); err != nil {
-		c.JSON(http.StatusBadRequest, formatResponse(c, strconv.Itoa(http.StatusBadRequest), err.Error(), nil, 0, 0, 0))
+		c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
 		return
 	}
 	c.JSON(http.StatusOK, formatResponse(c, strconv.Itoa(http.StatusOK), "Item deleted successfully!", nil, 0, 0, 0))

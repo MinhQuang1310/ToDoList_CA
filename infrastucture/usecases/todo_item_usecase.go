@@ -45,7 +45,7 @@ func (u *TodoItemUsecase) GetItem(id uint) (*models.TodoItem, error) {
 }
 
 // GetItems retrieves all Todoitems
-func (u *TodoItemUsecase) GetItems() ([]models.TodoItem, error) {
+func (u *TodoItemUsecase) GetItems(filter func(db *gorm.DB) *gorm.DB) ([]models.TodoItem, error) {
 	return u.repo.GetAll()
 }
 
