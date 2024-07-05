@@ -95,3 +95,40 @@ END $$;
 
 
 
+----- Procedure -----
+CREATE OR REPLACE PROCEDURE insert_book_test(
+    IN p_title CHARACTER VARYING,
+    IN p_description CHARACTER VARYING,
+    IN p_status CHARACTER VARYING,
+    OUT o_id INTEGER,
+    OUT o_title CHARACTER VARYING,
+    OUT o_description CHARACTER VARYING,
+    OUT o_status CHARACTER VARYING,
+    OUT o_count INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN 
+    INSERT INTO public.todo_items (title, description, status) 
+    VALUES (p_title, p_description, p_status)
+    RETURNING id, title, description, status 
+    INTO o_id, o_title, o_description, o_status;
+    
+    COMMIT;
+    SELECT COUNT(*) INTO o_count FROM public.todo_items;
+END;
+$$;
+
+DO $$
+DECLARE
+    v_id INTEGER;
+    v_title CHARACTER VARYING;
+    v_description CHARACTER VARYING;
+    v_status CHARACTER VARYING;
+    v_count INTEGER; 
+BEGIN
+    CALL insert_book_test('a12345678', 'test_procedure1', 'available', v_id, v_title, v_description, v_status, v_count);
+    
+    RAISE NOTICE 'Inserted book: ID %, Title %, Description %, Status %', v_id, v_title, v_description, v_status;
+    RAISE NOTICE 'Total number of records: %', v_count; 
+END $$;
