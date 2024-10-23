@@ -132,3 +132,37 @@ BEGIN
     RAISE NOTICE 'Inserted book: ID %, Title %, Description %, Status %', v_id, v_title, v_description, v_status;
     RAISE NOTICE 'Total number of records: %', v_count; 
 END $$;
+
+
+///inner join
+SELECT 
+    cj.tran_id,
+    cj.journey_status,
+    cjp.status as process_status
+FROM phuquy.customer_journey cj
+INNER JOIN phuquy.customer_journey_process cjp 
+ON cj.tran_id = cjp.tran_id;
+///left join
+SELECT 
+    cj.tran_id,
+    cj.journey_status,
+    cjp.status as process_status
+FROM phuquy.customer_journey cj
+LEFT JOIN phuquy.customer_journey_process cjp 
+ON cj.tran_id = cjp.tran_id;
+///right join
+SELECT 
+    cj.tran_id,
+    cj.journey_status,
+    cjp.status as process_status
+FROM phuquy.customer_journey cj
+RIGHT JOIN phuquy.customer_journey_process cjp 
+ON cj.tran_id = cjp.tran_id;
+///full join
+SELECT 
+    cj.tran_id,
+    cj.journey_status,
+    cjp.status as process_status
+FROM phuquy.customer_journey cj
+FULL JOIN phuquy.customer_journey_process cjp 
+ON cj.tran_id = cjp.tran_id;
