@@ -136,3 +136,24 @@ func (h *TodoItemHandler) DeleteItem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, formatResponse(c, strconv.Itoa(http.StatusOK), "Item deleted successfully!", nil, 0, 0, 0))
 }
+
+func (h *TodoItemHandler) RestoreItem(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	// Check if the item exists in the database
+	_, err := h.usecase.GetItem(uint(id))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, formatResponse(c, strconv.Itoa(http.StatusNotFound), errItemNotFound.Error(), nil, 0, 0, 0))
+		} else {
+			c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
+		}
+		return
+	}
+
+	// Delete the item from the usecase
+	if err := h.usecase.Restore(uint(id)); err != nil {
+		c.JSON(http.StatusInternalServerError, formatResponse(c, strconv.Itoa(http.StatusInternalServerError), err.Error(), nil, 0, 0, 0))
+		return
+	}
+	c.JSON(http.StatusOK, formatResponse(c, strconv.Itoa(http.StatusOK), "Item restored successfully!", nil, 0, 0, 0))
+}

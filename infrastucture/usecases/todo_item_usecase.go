@@ -102,3 +102,7 @@ func (u *TodoItemUsecase) CreateItemWithProcedure(item *models.TodoItem) error {
 	// Call stored procedure to create item
 	return u.repo.CreateWithProcedure(item)
 }
+
+func (u *TodoItemUsecase) Restore(id uint) error {
+	return u.repo.Restore(id)
+}

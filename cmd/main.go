@@ -31,7 +31,13 @@ func main() {
 	todoItemRepo := repository.NewTodoItemRepository(gormDB)
 	todoItemUsecase := usecases.NewTodoItemUsecase(todoItemRepo)
 	todoItemHandler := handlers.NewTodoItemHandler(todoItemUsecase)
+	// // Khởi tạo repository (giả định)
+	// userRepo := repository.NewUserRepository() // Cần triển khai
+	// // Khởi tạo use case
+	// authUseCase := usecases.NewAuthUseCase(userRepo)
 
+	// // Khởi tạo handler
+	// authHandler := handlers.NewAuthHandler(authUseCase)
 	// Set up router
 	router := gin.Default()
 
@@ -54,7 +60,11 @@ func main() {
 
 			// Delete a Todoitems
 			items.DELETE("/delete/:id", todoItemHandler.DeleteItem)
+
+			// Restore a deleted Todoitems
+			items.POST("/restore/:id", todoItemHandler.RestoreItem)
 		}
+
 	}
 
 	// Start the server

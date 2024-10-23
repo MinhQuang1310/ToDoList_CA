@@ -23,4 +23,7 @@ type TodoItemRepository interface {
 
 	// CreateWithProcedure creates a new TodoItem using PostgreSQL procedure.
 	CreateWithProcedure(item *models.TodoItem) error
+
+	// Restore items from the trash
+	Restore(id uint) error
 }

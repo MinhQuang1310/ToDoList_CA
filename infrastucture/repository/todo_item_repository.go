@@ -65,3 +65,7 @@ func (r *TodoItemRepository) CreateWithProcedure(item *models.TodoItem) error {
 
 	return tx.Commit().Error
 }
+
+func (r *TodoItemRepository) Restore(id uint) error {
+	return r.db.Exec("CALL restore_item(?)", id).Error
+}
